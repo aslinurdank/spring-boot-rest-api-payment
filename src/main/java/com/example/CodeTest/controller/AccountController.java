@@ -22,7 +22,8 @@ public class AccountController {
         Optional<Account> accountData = accountRepository.findById(id);
 
         if (accountData.isPresent()) {
-            return new ResponseEntity<>(accountData.get(), HttpStatus.OK);
+            Account accountFoundById=accountData.get();
+            return new ResponseEntity<>(accountFoundById, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }

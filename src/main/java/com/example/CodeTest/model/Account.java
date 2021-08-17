@@ -16,6 +16,10 @@ public class Account {
     private Long accountId;
     private BigDecimal balance;
 
+    public Account(Long accountId, BigDecimal balance) {
+        this.accountId = accountId;
+        this.balance = balance;
+    }
     public Long getAccountId() {
         return accountId;
     }

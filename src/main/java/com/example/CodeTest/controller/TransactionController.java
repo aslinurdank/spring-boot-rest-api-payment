@@ -13,10 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api")
@@ -53,7 +50,8 @@ public class TransactionController {
                             _transaction.setAccountId(transaction.getAccountId());
                             _transaction.setOrigin(transaction.getOrigin());
                             _transaction.setAmount(transaction.getAmount());
-                            return new ResponseEntity<>(transactionRepository.save(_transaction), HttpStatus.OK);
+                            Transaction transactionToUpdate=transactionRepository.save(_transaction);
+                            return new ResponseEntity<>(transactionToUpdate, HttpStatus.OK);
                      }
                     else {
                         return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
@@ -75,17 +73,19 @@ public class TransactionController {
         try {
             if (transaction.getMessageType().equals(MessageType.PAYMENT)) {
                 Optional<Account> accountData = accountRepository.findById(transaction.getAccountId());
-                Account _account = accountData.get();
-                int res = _account.getBalance().compareTo(transaction.getAmount());
+                Account account = accountData.get();
+                int res = account.getBalance().compareTo(transaction.getAmount());
                 if (res == 0 || res == 1) {
                     Double commissionRate = transaction.getOrigin().equals(Origin.VISA) ? 0.01 : 0.02;
-                    BigDecimal balance = _account.getBalance().subtract(transaction.getAmount().add(transaction.getAmount().multiply(BigDecimal.valueOf(commissionRate))));
-                    _account.setBalance(balance);
-                    accountRepository.save(_account);
+                    BigDecimal balance = account.getBalance().subtract(transaction.getAmount().add(transaction.getAmount().multiply(BigDecimal.valueOf(commissionRate))));
+                    account.setBalance(balance);
+                    Account _account=accountRepository.save(account);
 
                     Transaction _transaction = transactionRepository
                             .save(new Transaction(transaction.getMessageType(), transaction.getAccountId(), transaction.getOrigin(), transaction.getAmount()));
-
+                    Map<String, Object> result = new HashMap<String,Object>();
+                    result.put("transaction",_transaction);
+                    result.put("account",_account);
                     return new ResponseEntity<>(_transaction, HttpStatus.CREATED);
                 } else {
                     return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);

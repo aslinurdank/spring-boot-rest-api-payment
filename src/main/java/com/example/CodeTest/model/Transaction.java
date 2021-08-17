@@ -68,4 +68,7 @@ public class Transaction {
         this.amount = amount;
     }
 
+    public void setTransactionId(UUID transactionId) {
+        this.transactionId = transactionId;
+    }
 }
