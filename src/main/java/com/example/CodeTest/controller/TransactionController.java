@@ -24,7 +24,7 @@ public class TransactionController {
     @Autowired
     AccountRepository accountRepository;
 
-    @PutMapping("/payments/{id}")
+    @PutMapping("/transactions/{id}")
     @Transactional
     public ResponseEntity<Transaction> updateTransaction(@PathVariable("id") UUID id, @RequestBody Transaction transaction) {
         try {
@@ -40,8 +40,8 @@ public class TransactionController {
                         Account _account = accountData.get();
                         BigDecimal balance=  _account.getBalance();
                         balance=balance.add(_transaction.getAmount().add(_transaction.getAmount().multiply(BigDecimal.valueOf(commissionRateBefore))));
-                        int res = balance.compareTo(transaction.getAmount());
-                        if( res==0||res==1) {
+                        int balanceAfford = balance.compareTo(transaction.getAmount());
+                        if( balanceAfford==0||balanceAfford==1) {
                             balance= balance.subtract(transaction.getAmount().add(transaction.getAmount().multiply(BigDecimal.valueOf(commissionRate))));
                             _account.setBalance(balance);
                             accountRepository.save(_account);
@@ -51,6 +51,7 @@ public class TransactionController {
                             _transaction.setOrigin(transaction.getOrigin());
                             _transaction.setAmount(transaction.getAmount());
                             Transaction transactionToUpdate=transactionRepository.save(_transaction);
+
                             return new ResponseEntity<>(transactionToUpdate, HttpStatus.OK);
                      }
                     else {
@@ -67,25 +68,24 @@ public class TransactionController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    @PostMapping("/payments")
+    @PostMapping("/transactions")
     @Transactional
     public ResponseEntity<Transaction> createTransaction(@RequestBody Transaction transaction) {
         try {
             if (transaction.getMessageType().equals(MessageType.PAYMENT)) {
                 Optional<Account> accountData = accountRepository.findById(transaction.getAccountId());
                 Account account = accountData.get();
-                int res = account.getBalance().compareTo(transaction.getAmount());
-                if (res == 0 || res == 1) {
+                int balanceAfford = account.getBalance().compareTo(transaction.getAmount());
+                if (balanceAfford == 0 || balanceAfford == 1) {
                     Double commissionRate = transaction.getOrigin().equals(Origin.VISA) ? 0.01 : 0.02;
+
                     BigDecimal balance = account.getBalance().subtract(transaction.getAmount().add(transaction.getAmount().multiply(BigDecimal.valueOf(commissionRate))));
                     account.setBalance(balance);
                     Account _account=accountRepository.save(account);
 
                     Transaction _transaction = transactionRepository
                             .save(new Transaction(transaction.getMessageType(), transaction.getAccountId(), transaction.getOrigin(), transaction.getAmount()));
-                    Map<String, Object> result = new HashMap<String,Object>();
-                    result.put("transaction",_transaction);
-                    result.put("account",_account);
+
                     return new ResponseEntity<>(_transaction, HttpStatus.CREATED);
                 } else {
                     return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
@@ -97,7 +97,7 @@ public class TransactionController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    @GetMapping("/payments")
+    @GetMapping("/transactions")
     public ResponseEntity<List<Transaction>> getAllTransactions() {
         try {
             List<Transaction> transactions = new ArrayList<Transaction>();

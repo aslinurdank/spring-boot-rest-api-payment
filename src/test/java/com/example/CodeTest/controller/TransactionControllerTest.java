@@ -43,7 +43,7 @@ public class TransactionControllerTest {
         List<Transaction> transactions = new ArrayList<Transaction>();
         transactions.add(new Transaction(MessageType.PAYMENT, 4755L, Origin.MASTER, new BigDecimal(30.00)));
         Mockito.when(transactionController.getAllTransactions()).thenReturn(new ResponseEntity<>(transactions, HttpStatus.OK));
-        mockMvc.perform(get("/api/payments")).andExpect(status().isOk()).andExpect(jsonPath("$", Matchers.hasSize(1))).andExpect(jsonPath("$[0].accountId", is(4755)));
+        mockMvc.perform(get("/api/transactions")).andExpect(status().isOk()).andExpect(jsonPath("$", Matchers.hasSize(1))).andExpect(jsonPath("$[0].accountId", is(4755)));
     }
 
     @Test
@@ -54,7 +54,7 @@ public class TransactionControllerTest {
         Mockito.when(transactionController.createTransaction(ArgumentMatchers.any())).thenReturn(new ResponseEntity<>(transaction, HttpStatus.CREATED));
         String json = mapper.writeValueAsString(transaction);
 
-        mockMvc.perform(post("/api/payments").contentType(MediaType.APPLICATION_JSON).characterEncoding("utf-8")
+        mockMvc.perform(post("/api/transactions").contentType(MediaType.APPLICATION_JSON).characterEncoding("utf-8")
                 .content(json).accept(MediaType.APPLICATION_JSON)).andExpect(status().isCreated())
                 .andExpect(jsonPath("$.accountId", Matchers.equalTo(4755)))
                 .andExpect(jsonPath("$.messageType", Matchers.equalTo("PAYMENT")))
@@ -70,7 +70,7 @@ public class TransactionControllerTest {
 
         Mockito.when(transactionController.updateTransaction(ArgumentMatchers.any(),ArgumentMatchers.any())).thenReturn(new ResponseEntity<>(transaction, HttpStatus.OK));
         MockHttpServletRequestBuilder builder =
-                MockMvcRequestBuilders.put("/api/payments/" + id)
+                MockMvcRequestBuilders.put("/api/transactions/" + id)
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .accept(MediaType.APPLICATION_JSON)
                         .characterEncoding("UTF-8")
